@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <math.h>
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Converts a list of space delimited lat-long pairs to pixel point coordinates  //
@@ -21,6 +22,7 @@ int main(int argc, char** argv) //If not given a list, will look for data.txt in
    vector<float> latList;
    vector<float> longList;
    int height = 0, width = 0;
+   float latLowBound = 0.0, latHighBound = 0.0, longLowBound = 0.0, longHighBound = 0.0;
    
 
    if(argc > 2)
@@ -29,7 +31,15 @@ int main(int argc, char** argv) //If not given a list, will look for data.txt in
       {
          cerr << "Error reading arguments. The first two arguments must be the width and height" << endl;
       }
-      for(int i = 3 ; i < argc ;)
+      if(!(latLowBound = stof(argv[3])) || !(latHighBound = stof(argv[4])))
+      {
+
+      }
+      if(!(longLowBound = stof(argv[5])) || !(longHighBound = stof(argv[6])))
+      {
+
+      }
+      for(int i = 7 ; i < argc ;)
       {
          latList.push_back(stof(argv[i++]));
 
@@ -53,12 +63,22 @@ int main(int argc, char** argv) //If not given a list, will look for data.txt in
          size_t delim = line.find(" ");
 	 if(width == 0 && height == 0)
 	 {
-	    width = stoi(line.substr(0,delim - 1));
+	    width = stoi(line.substr(0,delim));
 	    height = stoi(line.substr(delim + 1));
 	 }
+         else if (latLowBound == 0.0 && latHighBound == 0.0)
+         {
+	    latLowBound = stof(line.substr(0,delim));
+            latHighBound = stof(line.substr(delim + 1));
+         }
+         else if (longLowBound == 0.0 && longHighBound == 0.0)
+         {
+	    longLowBound = stof(line.substr(0,delim));
+            longHighBound = stof(line.substr(delim + 1));
+         }
 	 else
 	 {
-	    latList.push_back(stof(line.substr(0,delim - 1)));
+	    latList.push_back(stof(line.substr(0,delim)));
             longList.push_back(stof(line.substr(delim + 1)));
 	 } 
       }
@@ -88,11 +108,13 @@ int main(int argc, char** argv) //If not given a list, will look for data.txt in
          maxLong = longList[i];
       }
    }
+   
+   cout << "longLowBound " << longLowBound << endl;
 
    for(int i = 0 ; i < size ; i++)
    {
-      latList[i] = (1 - ((latList[i] - minLat)/(maxLat - minLat)))*width;
-      longList[i] = (1 - ((longList[i] - minLong)/(maxLong - minLong)))*height;
+      latList[i] = round((minLat - latLowBound) + (((latList[i] - latLowBound)/(latHighBound - latLowBound)))*width);
+      longList[i] = round((minLong - longLowBound) + (((longList[i] - longLowBound)/(longHighBound - longLowBound)))*height);
    }
 
    ofstream outputFile;
